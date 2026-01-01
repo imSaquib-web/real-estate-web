@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://real-estate-web-server-teal.vercel.app/",
+  baseURL: "import.meta.env.VITE_API_URL",
 });
 
 API.interceptors.request.use((req) => {
