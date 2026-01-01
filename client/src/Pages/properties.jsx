@@ -1,0 +1,270 @@
+// import { useEffect, useState, useContext } from "react";
+// import API from "../api";
+// import { AuthContext } from "../authContext";
+// import { Link } from "react-router-dom";
+
+// const Properties = () => {
+//   const [properties, setProperties] = useState([]);
+//   const [filters, setFilters] = useState({
+//     type: "",
+//     minPrice: "",
+//     maxPrice: "",
+//   });
+
+//   const { user } = useContext(AuthContext);
+
+//   useEffect(() => {
+//     API.get("/properties").then((res) => setProperties(res.data));
+//   }, []);
+
+//   const handleDelete = async (id) => {
+//     await API.delete(`/properties/${id}`);
+//     setProperties(properties.filter((p) => p._id !== id));
+//   };
+
+//   const applyFilter = async () => {
+//     const query = new URLSearchParams(filters).toString();
+//     const res = await API.get(`/properties/filter?${query}`);
+//     setProperties(res.data);
+//   };
+
+//   return (
+//     <div className="properties-container">
+//       <div className="filters-section">
+//         <div className="filter-group">
+//           <label>Property Type</label>
+//           <select
+//             onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+//           >
+//             <option value="">All</option>
+//             <option value="rent">Rent</option>
+//             <option value="sale">Sale</option>
+//           </select>
+//         </div>
+
+//         <div className="filter-group">
+//           <label>Min Price</label>
+//           <input
+//             type="number"
+//             placeholder="0"
+//             onChange={(e) =>
+//               setFilters({ ...filters, minPrice: e.target.value })
+//             }
+//           />
+//         </div>
+
+//         <div className="filter-group">
+//           <label>Max Price</label>
+//           <input
+//             type="number"
+//             placeholder="999999"
+//             onChange={(e) =>
+//               setFilters({ ...filters, maxPrice: e.target.value })
+//             }
+//           />
+//         </div>
+
+//         <button onClick={applyFilter}>Apply Filter</button>
+//       </div>
+
+//       {properties.length === 0 ? (
+//         <div className="empty-state">
+//           <div className="empty-state-icon">🏠</div>
+//           <div className="empty-state-title">No Properties Found</div>
+//           <div className="empty-state-text">
+//             Try adjusting your filters or check back later
+//           </div>
+//         </div>
+//       ) : (
+//         <div className="properties-grid">
+//           {properties.map((p) => (
+//             <div key={p._id} className="property-card">
+//               <div className="property-card-header">
+//                 {p.image && <img src={p.image} alt="property" width="200" />}
+//                 <div className="property-card-title">{p.title}</div>
+//                 <span className="property-card-type">{p.type}</span>
+//               </div>
+//               <div className="property-card-body">
+//                 <div className="property-info">
+//                   <span className="property-location">{p.location}</span>
+//                   <span className="property-price">₹{p.price}</span>
+//                 </div>
+//                 <div className="property-owner">
+//                   Owner: {p.createdBy?.name || "Unknown"}
+//                 </div>
+
+//                 {user?.id === p.createdBy?._id && (
+//                   <div className="property-actions">
+//                     <Link to={`/edit/${p._id}`}>
+//                       <button className="btn-edit">Edit</button>
+//                     </Link>
+//                     <button
+//                       className="btn-delete"
+//                       onClick={() => handleDelete(p._id)}
+//                     >
+//                       Delete
+//                     </button>
+//                   </div>
+//                 )}
+//               </div>
+//             </div>
+//           ))}
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default Properties;
+
+import { useEffect, useState, useContext } from "react";
+import { Link } from "react-router-dom";
+import API from "../api";
+import { AuthContext } from "../authContext";
+
+const Properties = () => {
+  const [properties, setProperties] = useState([]);
+  const [filters, setFilters] = useState({
+    type: "",
+    minPrice: "",
+    maxPrice: "",
+  });
+
+  const { user } = useContext(AuthContext);
+
+  useEffect(() => {
+    fetchProperties();
+  }, []);
+
+  const fetchProperties = async () => {
+    const res = await API.get("/properties");
+    setProperties(res.data);
+  };
+
+  const handleDelete = async (id) => {
+    await API.delete(`/properties/${id}`);
+    setProperties(properties.filter((p) => p._id !== id));
+  };
+
+  const applyFilter = async () => {
+    const query = new URLSearchParams(filters).toString();
+    const res = await API.get(`/properties/filter?${query}`);
+    setProperties(res.data);
+  };
+
+  return (
+    <div className="properties-container">
+      {/* FILTERS */}
+      <div className="filters-section">
+        <div className="filter-group">
+          <label>Property Type</label>
+          <select
+            value={filters.type}
+            onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+          >
+            <option value="">All</option>
+            <option value="rent">Rent</option>
+            <option value="sale">Sale</option>
+          </select>
+        </div>
+
+        <div className="filter-group">
+          <label>Min Price</label>
+          <input
+            type="number"
+            placeholder="0"
+            value={filters.minPrice}
+            onChange={(e) =>
+              setFilters({ ...filters, minPrice: e.target.value })
+            }
+          />
+        </div>
+
+        <div className="filter-group">
+          <label>Max Price</label>
+          <input
+            type="number"
+            placeholder="999999"
+            value={filters.maxPrice}
+            onChange={(e) =>
+              setFilters({ ...filters, maxPrice: e.target.value })
+            }
+          />
+        </div>
+
+        <button onClick={applyFilter} className="btn-filter">
+          Apply Filter
+        </button>
+      </div>
+
+      {/* EMPTY STATE */}
+      {properties.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-state-icon">🏠</div>
+          <h2>No Properties Found</h2>
+          <p>Try adjusting filters or come back later</p>
+        </div>
+      ) : (
+        <div className="properties-grid">
+          {properties.map((p) => (
+            <div className="property-card" key={p._id}>
+              {/* IMAGE */}
+              <div className="property-image">
+                <img src={p.image || "/no-image.png"} alt={p.title} />
+                <span className={`badge ${p.type}`}>
+                  {p.type.toUpperCase()}
+                </span>
+              </div>
+
+              {/* CONTENT */}
+              <div className="property-content">
+                <h3 className="property-title">{p.title}</h3>
+                <p className="property-location">{p.location}</p>
+
+                <div className="property-price">₹{p.price}</div>
+
+                <p className="property-owner">
+                  Owner: {p.createdBy?.name || "Unknown"}
+                </p>
+
+                {/* CONTACT */}
+                <div className="property-contact">
+                  <a href={`tel:${p.createdBy.phone}`} className="btn call">
+                    📞 Call
+                  </a>
+
+                  <a
+                    href={`https://wa.me/${p.createdBy.phone}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn whatsapp"
+                  >
+                    💬 WhatsApp
+                  </a>
+                  {console.log(p.createdBy.phone)}
+                </div>
+
+                {/* OWNER ACTIONS */}
+                {user?.id === p.createdBy?._id && (
+                  <div className="property-actions">
+                    <Link to={`/edit/${p._id}`} className="btnEdit">
+                      Edit
+                    </Link>
+                    <button
+                      className="btn delete"
+                      onClick={() => handleDelete(p._id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Properties;
