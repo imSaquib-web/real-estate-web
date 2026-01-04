@@ -10,7 +10,7 @@ const login = () => {
 
   const handlSubmit = async (e) => {
     e.preventDefault();
-    const res = await API.post("/users/login", form);
+    const res = await API.post("/users/login", form)
     login(res.data.token);
     navigate("/");
   };
