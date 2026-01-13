@@ -7,6 +7,8 @@ const Properties = () => {
   const [properties, setProperties] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const [filters, setFilters] = useState({
     type: "",
@@ -21,20 +23,41 @@ const Properties = () => {
   }, [page]);
 
   const fetchProperties = async () => {
-    const res = await API.get(`/properties?page=${page}&limit=6`);
-    setProperties(res.data.properties);
-    setTotalPages(res.data.totalPages);
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await API.get(`/properties?page=${page}&limit=6`);
+      setProperties(res.data?.properties || []);
+      setTotalPages(res.data?.totalPages || 1);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to load properties");
+      setProperties([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDelete = async (id) => {
-    await API.delete(`/properties/${id}`);
-    setProperties(properties.filter((p) => p._id !== id));
+    try {
+      await API.delete(`/properties/${id}`);
+      setProperties(properties.filter((p) => p._id !== id));
+    } catch (err) {
+      setError("Failed to delete property");
+    }
   };
 
   const applyFilter = async () => {
-    const query = new URLSearchParams(filters).toString();
-    const res = await API.get(`/properties/filter?${query}`);
-    setProperties(res.data);
+    try {
+      setLoading(true);
+      setError(null);
+      const query = new URLSearchParams(filters).toString();
+      const res = await API.get(`/properties/filter?${query}`);
+      setProperties(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      setError("Failed to apply filters");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -82,8 +105,22 @@ const Properties = () => {
         </button>
       </div>
 
+      {/* ERROR STATE */}
+      {error && (
+        <div className="error-state">
+          <p>❌ {error}</p>
+        </div>
+      )}
+
+      {/* LOADING STATE */}
+      {loading && (
+        <div className="loading-state">
+          <p>⏳ Loading properties...</p>
+        </div>
+      )}
+
       {/* EMPTY STATE */}
-      {properties.length === 0 ? (
+      {!loading && properties.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state-icon">🏠</div>
           <h2>No Properties Found</h2>
